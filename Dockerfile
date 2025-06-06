@@ -1,22 +1,25 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 LABEL maintainer="wingnut0310 <wingnut0310@gmail.com>"
 
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV GOTTY_TAG_VER v1.0.1
+ENV LANG en_US.UTF-8 \
+    LANGUAGE en_US:en \
+    GOTTY_TAG_VER=v1.0.1 \
+    PORT=8080
 
-# Install dependencies
+# Install dependencies and code-server
 RUN apt-get update && \
-    apt-get install -y curl tmate locales && \
-    locale-gen en_US.UTF-8 && \
-    curl -sL https://github.com/yudai/gotty/releases/download/${GOTTY_TAG_VER}/gotty_linux_amd64.tar.gz \
-    | tar -xz -C /usr/local/bin && \
-    chmod +x /usr/local/bin/gotty && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+    apt-get install -y curl wget gnupg software-properties-common && \
+    curl -fsSL https://code-server.dev/install.sh | sh && \
+    curl -sLk https://github.com/yudai/gotty/releases/download/${GOTTY_TAG_VER}/gotty_linux_amd64.tar.gz \
+    | tar xzC /usr/local/bin && \
+    apt-get purge --auto-remove -y curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY run_gotty.sh /run_gotty.sh
-RUN chmod +x /run_gotty.sh
+# Add startup script
+COPY run_combined.sh /run_combined.sh
+RUN chmod +x /run_combined.sh
 
-EXPOSE 8080
+EXPOSE ${PORT}
 
-CMD ["/bin/bash", "/run_gotty.sh"]
+CMD ["/bin/bash", "/run_combined.sh"]
