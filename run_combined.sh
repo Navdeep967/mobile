@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Generate a random 12-character password
-PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 12)
-
-# Set password for coder (for SSH)
-echo "coder:$PASSWORD" | chpasswd
+# Generate a random 10-character password
+PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 10)
 
 echo "=========================================="
-echo "🔑 SSH & code-server password: $PASSWORD"
+echo "🔒 Gotty Web Terminal Password: $PASSWORD"
 echo "=========================================="
 
-# Start SSHD in the background
-/usr/sbin/sshd -D &
+# Start both Gotty and code-server
+# Use `&` to run them in background and `wait` to keep container alive
+/usr/local/bin/gotty --permit-write --reconnect --credential "admin:$PASSWORD" /bin/bash &
 
-# Run code-server as the coder user, passing PASSWORD env var
-exec su coder -c "export PASSWORD='$PASSWORD'; code-server --bind-addr 0.0.0.0:8080 --auth password"
+code-server --bind-addr 0.0.0.0:8080 --auth none &
+
+# Wait for background processes
+wait
