@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Generate a random 10-character password for Gotty
-PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 10)
+# Generate a random 12-character password
+PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 12)
+
+# Set password for coder (SSH and sudo)
+echo "coder:$PASSWORD" | chpasswd
 
 echo "=========================================="
-echo "🔒 Gotty Web Terminal Password: $PASSWORD"
+echo "🔑 SSH & code-server password: $PASSWORD"
 echo "=========================================="
 
-# Start Gotty web terminal in the background
-/usr/local/bin/gotty --permit-write --reconnect --credential "admin:$PASSWORD" /bin/bash &
+# Start SSHD in the background (in foreground with -D for Docker best practice)
+/usr/sbin/sshd -D &
 
-# Start code-server (no authentication)
-code-server --bind-addr 0.0.0.0:8080 --auth none &
-
-# Wait for both background jobs
-wait
+# Start code-server with password auth and the same password
+code-server --bind-addr 0.0.0.0:8080 --auth password --password "$PASSWORD"
