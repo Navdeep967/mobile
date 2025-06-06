@@ -1,26 +1,23 @@
 FROM ubuntu:22.04
-LABEL maintainer="wingnut0310 <wingnut0310@gmail.com>"
 
+# Set environment variables
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
-    GOTTY_TAG_VER=v1.0.1 \
     PORT=8080
 
 # Install dependencies and code-server
 RUN apt-get update && \
-    apt-get install -y curl wget gnupg software-properties-common tar && \
+    apt-get install -y curl && \
     curl -fsSL https://code-server.dev/install.sh | sh && \
-    wget -O /tmp/gotty.tar.gz "https://github.com/yudai/gotty/releases/download/v1.0.1/gotty_linux_amd64.tar.gz" && \
-    tar -xzvf /tmp/gotty.tar.gz -C /usr/local/bin && \
-    chmod +x /usr/local/bin/gotty && \
-    rm /tmp/gotty.tar.gz && \
-    apt-get purge --auto-remove -y curl wget && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY run_combined.sh /run_combined.sh
-RUN chmod +x /run_combined.sh
+# Expose code-server port
+EXPOSE ${PORT}
 
-EXPOSE 8080
+# Use a non-root user for security (recommended)
+RUN useradd -m coder
+USER coder
+WORKDIR /home/coder
 
-CMD ["/bin/bash", "/run_combined.sh"]
+# Start code-server with password authentication (change YOUR_PASSWORD)
+CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "password", "--password", "YOUR_PASSWORD"]
