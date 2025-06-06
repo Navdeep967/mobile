@@ -10,8 +10,11 @@ echo "=========================================="
 echo "🔑 SSH & code-server password: $PASSWORD"
 echo "=========================================="
 
-# Start SSHD in the background (in foreground with -D for Docker best practice)
+# Start SSHD in the background
 /usr/sbin/sshd -D &
 
-# Start code-server with password auth and the same password
-code-server --bind-addr 0.0.0.0:8080 --auth password --password "$PASSWORD"
+# Set password env var for code-server
+export PASSWORD="$PASSWORD"
+
+# Start code-server (no --password argument, use $PASSWORD)
+sudo -u coder -E code-server --bind-addr 0.0.0.0:8080 --auth password
